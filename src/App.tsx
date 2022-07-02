@@ -1,4 +1,3 @@
-import logo from "./logo.svg";
 import {
   Box,
   Image,
@@ -8,70 +7,71 @@ import {
   Heading,
   Switch,
   useColorMode,
+  View,
   VStack,
-  Box,
+  Flex,
+  Button,
 } from "native-base";
+import initializeAuthentication from "./services/firebase";
+import { GoogleAuthProvider, getAuth, signInWithPopup, User, signOut } from "firebase/auth"
+import { useState } from "react";
+import firebase from "./services/firebase";
+import Menu from "./menu/menu";
+const provider = new GoogleAuthProvider()
 
-function App() {
+initializeAuthentication();
+
+
+
+const App = () => {
+  const [user, setUser] = useState<User>()
   const { colorMode } = useColorMode();
+
+  const loginHandler = async () => {
+    const auth = getAuth()
+
+    if (localStorage.getItem('access')) {
+      const auth = getAuth();
+      signOut(auth).then(() => {
+        localStorage.clear();
+        indexedDB.deleteDatabase('firebaseLocalStorageDb');
+        setUser(undefined)
+      }).catch((error) => {
+        console.log("error", error)
+      });
+    } else {
+      signInWithPopup(auth, provider).then(result => {
+        const user = result.user;
+        console.log("user", user)
+        localStorage.setItem("access", JSON.stringify(user.refreshToken))
+        setUser(user)
+      }).catch(err => {
+        setUser(undefined)
+        localStorage.clear();
+      })
+    }
+  }
 
   return (
     <Box
-      bg={colorMode === "light" ? "coolGray.50" : "coolGray.900"}
+      bg={colorMode === "light" ? "amber.100" : "coolGray.900"}
       minHeight="100vh"
-      justifyContent="center"
-      px={4}
+      px={5}
+      py={5}
     >
-      <VStack space={5} alignItems="center">
-        <Image
-          source={{ uri: logo }}
-          resizeMode="contain"
-          size={220}
-          alt="NativeBase logo"
-        />
-        <Heading size="lg">Welcome to NativeBase</Heading>
-        <Text>
-          Edit{" "}
-          <Box
-            _text={{
-              fontFamily: "monospace",
-              fontSize: "sm",
-            }}
-            px={2}
-            py={1}
-            _dark={{ bg: "blueGray.800" }}
-            _light={{ bg: "blueGray.200" }}
-          >
-            src/pages/index.js
-          </Box>{" "}
-          and save to reload.
-        </Text>
-        <Link href="https://docs.nativebase.io" isExternal>
-          <Text color="primary.500" underline fontSize={"xl"}>
-            Learn NativeBase
-          </Text>
-        </Link>
-        <ToggleDarkMode />
-      </VStack>
+      <HStack alignItems="center" backgroundColor={'red'} justifyContent={'space-between'}>
+        <View >
+          <Heading size="lg">Welcome to NativeBase</Heading>
+        </View>
+        <View flexDirection={'row'} justifyContent={'space-evenly'} alignContent={'space-between'} w="20%">
+          <Button onPress={loginHandler}>{localStorage.getItem('access') ? 'Log out' : 'Sign in'}</Button>
+        </View>
+      </HStack>
+      <Menu />
     </Box>
   );
 }
 
-function ToggleDarkMode() {
-  const { colorMode, toggleColorMode } = useColorMode();
-  return (
-    <HStack space={2}>
-      <Text>Dark</Text>
-      <Switch
-        isChecked={colorMode === "light"}
-        onToggle={toggleColorMode}
-        aria-label={
-          colorMode === "light" ? "switch to dark mode" : "switch to light mode"
-        }
-      />
-      <Text>Light</Text>
-    </HStack>
-  );
-}
+
 
 export default App;

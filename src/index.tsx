@@ -4,17 +4,24 @@ import App from "./App";
 import { NativeBaseProvider, extendTheme } from "native-base";
 import reportWebVitals from "./reportWebVitals";
 
-const theme = extendTheme({
-  config: {
-    initialColorMode: "dark",
-  },
-});
-
 // extend the theme
 type MyThemeType = typeof theme;
 declare module "native-base" {
-  interface ICustomTheme extends MyThemeType {}
+  interface ICustomTheme extends MyThemeType { }
 }
+
+const newColorTheme = {
+  brand: {
+    900: '#8287af',
+    800: '#7c83db',
+    700: '#b3bef6',
+  },
+  config: {
+    initialColorMode: "900",
+  },
+};
+const theme = extendTheme({ colors: newColorTheme });
+
 ReactDOM.render(
   <React.StrictMode>
     <NativeBaseProvider theme={theme}>
