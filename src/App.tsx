@@ -40,15 +40,20 @@ const App = () => {
     setUser({ ...user, refreshToken: localAccess ?? '', displayName: localName ?? '', email: localEmail ?? '' })
   }, [])
 
+
+  const clearPassword = () => {
+    localStorage.clear();
+    indexedDB.deleteDatabase("firebaseLocalStorageDb");
+    setUser({} as User);
+  }
+
   const loginHandler = async () => {
     const auth = getAuth();
     if (localStorage.getItem("access")) {
       const auth = getAuth();
       signOut(auth)
         .then(() => {
-          localStorage.clear();
-          indexedDB.deleteDatabase("firebaseLocalStorageDb");
-          setUser({} as User);
+          clearPassword()
         })
         .catch((error) => {
           console.log("error", error);
@@ -57,15 +62,13 @@ const App = () => {
       signInWithPopup(auth, provider)
         .then((result) => {
           const user = result.user;
-          console.log("user", user);
           localStorage.setItem("access", user.refreshToken ?? '');
           localStorage.setItem("name", user.displayName ?? '');
           localStorage.setItem("email", user.email ?? '');
           setUser(user);
         })
         .catch((err) => {
-          setUser({} as User);
-          localStorage.clear();
+          clearPassword()
         });
     }
   };
