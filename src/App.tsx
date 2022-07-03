@@ -13,7 +13,7 @@ import {
   Button,
   Icon,
 } from "native-base";
-import initializeAuthentication from "./services/firebase";
+// import initializeAuthentication from "./services/firebase";
 import {
   GoogleAuthProvider,
   getAuth,
@@ -21,27 +21,34 @@ import {
   User,
   signOut,
 } from "firebase/auth";
-import { useState } from "react";
-import firebase from "./services/firebase";
+import { useEffect, useState } from "react";
+// import firebase from "./services/firebase";
 import Menu from "./menu/menu";
+import { FireBaseService } from "./services/firebase";
 const provider = new GoogleAuthProvider();
 
-initializeAuthentication();
+FireBaseService.initializeAuthentication();
 
 const App = () => {
-  const [user, setUser] = useState<User>();
+  const [user, setUser] = useState<User>({} as User);
   const { colorMode } = useColorMode();
+
+  useEffect(() => {
+    let localAccess = localStorage.getItem("access")
+    let localName = localStorage.getItem("name")
+    let localEmail = localStorage.getItem("email")
+    setUser({ ...user, refreshToken: localAccess ?? '', displayName: localName ?? '', email: localEmail ?? '' })
+  }, [])
 
   const loginHandler = async () => {
     const auth = getAuth();
-
     if (localStorage.getItem("access")) {
       const auth = getAuth();
       signOut(auth)
         .then(() => {
           localStorage.clear();
           indexedDB.deleteDatabase("firebaseLocalStorageDb");
-          setUser(undefined);
+          setUser({} as User);
         })
         .catch((error) => {
           console.log("error", error);
@@ -51,11 +58,13 @@ const App = () => {
         .then((result) => {
           const user = result.user;
           console.log("user", user);
-          localStorage.setItem("access", JSON.stringify(user.refreshToken));
+          localStorage.setItem("access", user.refreshToken ?? '');
+          localStorage.setItem("name", user.displayName ?? '');
+          localStorage.setItem("email", user.email ?? '');
           setUser(user);
         })
         .catch((err) => {
-          setUser(undefined);
+          setUser({} as User);
           localStorage.clear();
         });
     }
@@ -74,11 +83,14 @@ const App = () => {
             <Heading color={"black"}>THINKING...</Heading>
           </Box>
           <Box>
-            <Button size={"sm"}>Sign In</Button>
+            <Button size={"sm"} onPress={loginHandler}>{localStorage.getItem("access") ? "Log out" : "Sign in"}</Button>
           </Box>
         </Flex>
       </Box>
-      <Menu />
+      {
+        localStorage.getItem("access") ? <Menu user={user} /> : <div></div>
+      }
+      {/* <Menu /> */}
     </View>
   );
 
