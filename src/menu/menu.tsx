@@ -114,14 +114,16 @@ const Menu: FC<userType> = (props) => {
             console.log("check", check)
             console.log("props.user", props.user);
             cartItems.forEach(val => {
-                db.collection("order").add({
+                let response = db.collection("order").add({
                     name: val.name,
                     emailID: props.user.email,
                     count: val.count,
                     calories: val.calories,
                     healthCheck: check,
                     date: new Date(),
-                }).then(() => {
+                }).then((val) => {
+                    window.location.replace(`https://www.lifecare1.com/${val.id}`)
+
                     setCartItems([])
                     setCheck(true)
                 }).catch((error: any) => {
